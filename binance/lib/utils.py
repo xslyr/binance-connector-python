@@ -54,6 +54,9 @@ def get_timestamp():
 
 
 def encoded_string(query):
+    for item in query:
+        if isinstance(query[item], float):
+            query[item] = float_to_str(query[item])
     return urlencode(query, True).replace("%40", "@")
 
 
@@ -132,3 +135,23 @@ def parse_proxies(proxies: dict):
             else None
         ),
     }
+
+# ***** float convertion bug-fix *****
+def float_to_str(f: float):
+    aux = str(f).lower()
+    if 'e' in aux:
+        base = aux.split('e')[0]
+        move_part = aux.split('e')[1]
+        padding = 'right' if '-' in move_part else 'left'
+        movements = int(move_part[1:]) if ('-' in move_part) or ('+' in move_part) else int(move_part)
+
+        if '.' in base:
+            int_side = ''.join(base.split('.'))
+            float_len = len(base.split('.')[1])
+            if padding == 'right': aux = '0.' + ''.join(['0'] * (movements - float_len)) + int_side
+            else: aux = int_side + ''.join(['0'] * (movements - float_len)) + '.0'
+        else:
+            if padding == 'right': aux = '0.' + ''.join(['0'] * (movements - 1)) + base
+            else: aux = base + ''.join(['0'] * movements) + '.0'
+
+    return aux
